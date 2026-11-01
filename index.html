@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>VRQuests — Rec-Style VR Quests</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <div id="hud">
+    <div class="hud-top">
+      <div class="player-card">
+        <span class="label">YOU</span>
+        <div class="bar"><div id="hp-you" class="fill hp"></div></div>
+        <span id="hp-text">100 HP</span>
+        <span id="coins-text">🪙 0</span>
+      </div>
+      <div class="center">
+        <div id="quest-label">REC CENTER</div>
+        <div id="status">Pick a quest to begin.</div>
+        <div id="objective">Walk into a portal, or pick a quest below.</div>
+      </div>
+      <div class="player-card">
+        <span class="label">QUEST</span>
+        <div class="bar"><div id="boss-bar" class="fill boss"></div></div>
+        <span id="boss-text">No boss yet</span>
+      </div>
+    </div>
+    <div id="banner"></div>
+    <div id="toast"></div>
+    <div class="hud-bottom">
+      <button id="btn-hub">🏠 Rec Center</button>
+      <button id="btn-heal" title="Desktop: H">💚 Heal (costs 20 coins)</button>
+      <span id="players-text">Solo</span>
+    </div>
+  </div>
+
+  <div id="vr-bar" class="hidden">
+    <button id="btn-vr-float" class="primary">Enter VR</button>
+    <button id="btn-exit-vr" class="hidden">Exit VR</button>
+    <span id="vr-status"></span>
+  </div>
+
+  <div id="lobby">
+    <h1>VRQuests</h1>
+    <p class="tagline">Rec Room-style quests, in your browser. No install.</p>
+    <p class="intro">
+      Hang out in the Rec Center, pick a quest portal, grab your sword and wand,
+      collect crystals, beat the minions, open the gate, and take down the boss.
+      Play solo, or host a party and quest together — up to 4 players.
+    </p>
+
+    <div class="avatar-row">
+      <span>Your color:</span>
+      <div id="colors"></div>
+    </div>
+
+    <div class="quests">
+      <div class="quest-card" data-quest="goblin">
+        <div class="q-emoji">🌲</div><h2>Goblin Grotto</h2>
+        <p>Easy · Forest grotto · Goblins</p><p class="boss-line">Boss: Goblin King 👑</p>
+        <button class="primary start-quest" data-quest="goblin">Start Quest</button>
+      </div>
+      <div class="quest-card" data-quest="skull">
+        <div class="q-emoji">🏝️</div><h2>Skull Isle</h2>
+        <p>Medium · Island ruins · Skeletons</p><p class="boss-line">Boss: Skeleton Captain 💀</p>
+        <button class="primary start-quest" data-quest="skull">Start Quest</button>
+      </div>
+      <div class="quest-card" data-quest="ember">
+        <div class="q-emoji">🌋</div><h2>Ember Keep</h2>
+        <p>Hard · Lava castle · Fire Imps</p><p class="boss-line">Boss: Ember Witch 🔥</p>
+        <button class="primary start-quest" data-quest="ember">Start Quest</button>
+      </div>
+    </div>
+
+    <div class="howto">
+      <div><b>Quest loop</b><span>1) Collect 5 crystals &nbsp; 2) Defeat 6 minions &nbsp; 3) Touch the altar to open the gate &nbsp; 4) Defeat the boss. Then you win — and get 100 bonus coins.</span></div>
+      <div><b>On Quest</b><span>Left thumbstick to move, right thumbstick to snap-turn. Right trigger = sword swing. Left trigger = magic bolt. Walk into a portal in the Rec Center to start that quest. Touch a red heart to heal, a gold coin to collect it.</span></div>
+      <div><b>On desktop</b><span>Click the scene to capture the mouse, WASD to move, mouse to look, click = sword, F = magic bolt, H = heal, E = use altar. Q / E also turn if the mouse isn't captured.</span></div>
+      <div><b>Party play</b><span>One player hosts, the others join with the code. The host runs the enemies and quest progress, everyone sees each other's avatars. A normal home Wi-Fi WebRTC connection works.</span></div>
+    </div>
+
+    <div class="modes">
+      <button id="btn-solo" class="primary">Play Solo</button>
+      <button id="btn-host">Host a Party</button>
+      <button id="btn-join">Join a Party</button>
+    </div>
+
+    <div id="join-box" class="join-box hidden">
+      <label for="join-code">Party code from your host</label>
+      <div class="row">
+        <input id="join-code" placeholder="e.g. quest-4821" autocomplete="off">
+        <button id="btn-connect">Connect</button>
+      </div>
+    </div>
+    <div id="host-box" class="join-box hidden">
+      <p>Share this code. Friends open this page, choose <b>Join a Party</b>, and enter it.</p>
+      <div class="row"><input id="host-code" readonly><button id="btn-copy">Copy code</button></div>
+      <p id="host-status" class="muted">Waiting for players to connect…</p>
+    </div>
+
+    <div class="row actions">
+      <button id="btn-vr" class="primary">Enter VR (Quest 2+)</button>
+      <button id="btn-desktop">Play on Desktop</button>
+    </div>
+    <p class="muted small">
+      On Quest, open this page in the Meta Quest Browser, then tap Enter VR.
+      The page starts in 2D — that's normal. After a quest starts, the Enter VR
+      button stays in the bottom-right corner, so you can switch into VR at any time.<br>
+      Fan-made game inspired by the quest style of Rec Room. Not affiliated with Rec Room Inc.
+    </p>
+    <p id="lobby-error" class="error"></p>
+  </div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
